@@ -1,0 +1,625 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UrbanMove - Dashboard</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        header {
+            background: #0f172a;
+            color: white;
+            padding: 25px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        header h1 {
+            font-size: 27px;
+        }
+
+        header p {
+            color: #cbd5e1;
+            margin-top: 6px;
+        }
+
+        .boton-actualizar {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .boton-actualizar:hover {
+            background: #1d4ed8;
+        }
+
+        .contenedor {
+            max-width: 1400px;
+            margin: auto;
+            padding: 30px;
+        }
+
+        .titulo-seccion {
+            margin: 25px 0 18px;
+            font-size: 21px;
+        }
+
+        .indicadores {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+        }
+
+        .tarjeta {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .tarjeta h3 {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .valor {
+            font-size: 29px;
+            font-weight: bold;
+            color: #0f172a;
+        }
+
+        .graficos {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .grafico {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            min-width: 0;
+        }
+
+        .grafico h3 {
+            margin-bottom: 20px;
+            font-size: 17px;
+        }
+
+        .grafico canvas {
+            max-height: 300px;
+        }
+
+        .tabla-contenedor {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #475569;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        #estado {
+            color: #cbd5e1;
+            font-size: 12px;
+        }
+
+        @media (max-width: 800px) {
+            .indicadores {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .graficos {
+                grid-template-columns: 1fr;
+            }
+
+            .contenedor {
+                padding: 18px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .indicadores {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div>
+        <h1>UrbanMove</h1>
+        <p>Plataforma de análisis de movilidad urbana</p>
+        <div id="estado">Preparando dashboard...</div>
+    </div>
+
+    <button class="boton-actualizar" onclick="actualizarDashboard()">
+        Actualizar datos
+    </button>
+</header>
+
+<main class="contenedor">
+
+    <h2 class="titulo-seccion">Indicadores generales</h2>
+
+    <section class="indicadores">
+
+        <div class="tarjeta">
+            <h3>Total de lecturas</h3>
+            <div class="valor" id="totalLecturas">-</div>
+        </div>
+
+        <div class="tarjeta">
+            <h3>Vehículos registrados</h3>
+            <div class="valor" id="totalVehiculos">-</div>
+        </div>
+
+        <div class="tarjeta">
+            <h3>Rutas analizadas</h3>
+            <div class="valor" id="totalRutas">-</div>
+        </div>
+
+        <div class="tarjeta">
+            <h3>Estaciones registradas</h3>
+            <div class="valor" id="totalEstaciones">-</div>
+        </div>
+
+        <div class="tarjeta">
+            <h3>Velocidad promedio</h3>
+            <div class="valor" id="velocidadPromedio">-</div>
+        </div>
+
+        <div class="tarjeta">
+            <h3>Posible congestión</h3>
+            <div class="valor" id="porcentajeCongestion">-</div>
+        </div>
+
+    </section>
+
+
+    <h2 class="titulo-seccion">Análisis de movilidad</h2>
+
+    <section class="graficos">
+
+        <div class="grafico">
+            <h3>Posible congestión por ruta</h3>
+            <canvas id="graficoRutas"></canvas>
+        </div>
+
+        <div class="grafico">
+            <h3>Actividad por estación</h3>
+            <canvas id="graficoEstaciones"></canvas>
+        </div>
+
+        <div class="grafico">
+            <h3>Movilidad durante las 24 horas</h3>
+            <canvas id="graficoHoras"></canvas>
+        </div>
+
+        <div class="grafico">
+            <h3>Velocidad promedio por estación</h3>
+            <canvas id="graficoVelocidadEstaciones"></canvas>
+        </div>
+
+    </section>
+
+
+    <h2 class="titulo-seccion">Detalle de rutas</h2>
+
+    <section class="tabla-contenedor">
+
+        <h3>Rendimiento de las rutas</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Ruta</th>
+                    <th>Velocidad promedio</th>
+                    <th>Baja velocidad</th>
+                </tr>
+            </thead>
+
+            <tbody id="tablaRutas">
+            </tbody>
+        </table>
+
+    </section>
+
+</main>
+
+<footer>
+    UrbanMove - Proyecto académico de arquitectura de datos
+</footer>
+
+
+<script>
+
+    let graficoRutas = null;
+    let graficoEstaciones = null;
+    let graficoHoras = null;
+    let graficoVelocidadEstaciones = null;
+
+
+    // =====================================
+    // CARGAR INDICADORES
+    // =====================================
+
+    async function cargarIndicadores() {
+
+        const respuesta = await fetch("/api/indicadores");
+        const datos = await respuesta.json();
+
+        if (!respuesta.ok) {
+            throw new Error(datos.error || "Error al cargar indicadores");
+        }
+
+        document.getElementById("totalLecturas").textContent =
+            Number(datos.total_lecturas).toLocaleString("es-CO");
+
+        document.getElementById("totalVehiculos").textContent =
+            datos.total_vehiculos;
+
+        document.getElementById("totalRutas").textContent =
+            datos.total_rutas;
+
+        document.getElementById("totalEstaciones").textContent =
+            datos.total_estaciones;
+
+        document.getElementById("velocidadPromedio").textContent =
+            datos.velocidad_promedio + " km/h";
+
+        document.getElementById("porcentajeCongestion").textContent =
+            datos.porcentaje_baja_velocidad + "%";
+    }
+
+
+    // =====================================
+    // CARGAR RUTAS
+    // =====================================
+
+    async function cargarRutas() {
+
+        const respuesta = await fetch("/api/rutas");
+        const datos = await respuesta.json();
+
+        if (!respuesta.ok) {
+            throw new Error(datos.error || "Error al cargar rutas");
+        }
+
+        const etiquetas = datos.map(item => item.ruta);
+
+        const porcentajes = datos.map(
+            item => item.porcentaje_baja_velocidad
+        );
+
+        if (graficoRutas) {
+            graficoRutas.destroy();
+        }
+
+        graficoRutas = new Chart(
+            document.getElementById("graficoRutas"),
+            {
+                type: "bar",
+
+                data: {
+                    labels: etiquetas,
+
+                    datasets: [{
+                        label: "Baja velocidad (%)",
+                        data: porcentajes,
+                        backgroundColor: "#2563eb"
+                    }]
+                },
+
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: "Porcentaje (%)"
+                            }
+                        }
+                    }
+                }
+            }
+        );
+
+
+        // Actualizar tabla
+
+        const tabla = document.getElementById("tablaRutas");
+
+        tabla.innerHTML = "";
+
+        datos.forEach(item => {
+
+            const fila = document.createElement("tr");
+
+            fila.innerHTML = `
+                <td>${item.ruta}</td>
+                <td>${item.velocidad_promedio} km/h</td>
+                <td>${item.porcentaje_baja_velocidad}%</td>
+            `;
+
+            tabla.appendChild(fila);
+        });
+    }
+
+
+    // =====================================
+    // CARGAR ESTACIONES
+    // =====================================
+
+    async function cargarEstaciones() {
+
+        const respuesta = await fetch("/api/estaciones");
+        const datos = await respuesta.json();
+
+        if (!respuesta.ok) {
+            throw new Error(datos.error || "Error al cargar estaciones");
+        }
+
+        const etiquetas = datos.map(item => item.estacion);
+
+        const cantidades = datos.map(
+            item => item.total_lecturas
+        );
+
+        if (graficoEstaciones) {
+            graficoEstaciones.destroy();
+        }
+
+        graficoEstaciones = new Chart(
+            document.getElementById("graficoEstaciones"),
+            {
+                type: "doughnut",
+
+                data: {
+                    labels: etiquetas,
+
+                    datasets: [{
+                        data: cantidades,
+                        backgroundColor: [
+                            "#2563eb",
+                            "#0d9488",
+                            "#f59e0b",
+                            "#8b5cf6",
+                            "#ef4444"
+                        ]
+                    }]
+                },
+
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true
+                }
+            }
+        );
+    }
+
+
+    // =====================================
+    // CARGAR MOVILIDAD POR HORA
+    // =====================================
+
+    async function cargarHoras() {
+
+        const respuesta = await fetch("/api/horas");
+        const datos = await respuesta.json();
+
+        if (!respuesta.ok) {
+            throw new Error(datos.error || "Error al cargar movilidad por hora");
+        }
+
+        const etiquetas = datos.map(
+            item => String(item.hora).padStart(2, "0") + ":00"
+        );
+
+        const cantidades = datos.map(
+            item => item.total_lecturas
+        );
+
+        if (graficoHoras) {
+            graficoHoras.destroy();
+        }
+
+        graficoHoras = new Chart(
+            document.getElementById("graficoHoras"),
+            {
+                type: "line",
+
+                data: {
+                    labels: etiquetas,
+
+                    datasets: [{
+                        label: "Total de lecturas",
+                        data: cantidades,
+                        borderColor: "#0d9488",
+                        backgroundColor: "rgba(13, 148, 136, 0.15)",
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: "Cantidad de lecturas"
+                            }
+                        }
+                    }
+                }
+            }
+        );
+    }
+
+
+    // =====================================
+    // CARGAR VELOCIDAD POR ESTACION
+    // =====================================
+
+    async function cargarVelocidadEstaciones() {
+
+        const respuesta = await fetch("/api/velocidad-estaciones");
+        const datos = await respuesta.json();
+
+        if (!respuesta.ok) {
+            throw new Error(datos.error || "Error al cargar velocidad por estación");
+        }
+
+        const etiquetas = datos.map(
+            item => item.estacion
+        );
+
+        const velocidades = datos.map(
+            item => item.velocidad_promedio
+        );
+
+        if (graficoVelocidadEstaciones) {
+            graficoVelocidadEstaciones.destroy();
+        }
+
+        graficoVelocidadEstaciones = new Chart(
+            document.getElementById("graficoVelocidadEstaciones"),
+            {
+                type: "bar",
+
+                data: {
+                    labels: etiquetas,
+
+                    datasets: [{
+                        label: "Velocidad promedio (km/h)",
+                        data: velocidades,
+                        backgroundColor: "#8b5cf6"
+                    }]
+                },
+
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: "Velocidad (km/h)"
+                            }
+                        }
+                    }
+                }
+            }
+        );
+    }
+
+
+    // =====================================
+    // ACTUALIZAR TODO EL DASHBOARD
+    // =====================================
+
+    async function actualizarDashboard() {
+
+        const estado = document.getElementById("estado");
+        const boton = document.querySelector(".boton-actualizar");
+
+        estado.textContent = "Actualizando información...";
+        boton.disabled = true;
+        boton.textContent = "Actualizando...";
+
+        try {
+
+            await Promise.all([
+                cargarIndicadores(),
+                cargarRutas(),
+                cargarEstaciones(),
+                cargarHoras(),
+                cargarVelocidadEstaciones()
+            ]);
+
+            estado.textContent =
+                "Datos actualizados correctamente";
+
+        } catch (error) {
+
+            console.error("Error:", error);
+
+            estado.textContent =
+                "Error al actualizar: " + error.message;
+
+        } finally {
+
+            boton.disabled = false;
+            boton.textContent = "Actualizar datos";
+        }
+    }
+
+
+    // Cargar dashboard al abrir la página
+
+    actualizarDashboard();
+
+</script>
+
+</body>
+</html>
